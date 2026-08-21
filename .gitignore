@@ -1,0 +1,29 @@
+# Environment & Virtual Environments
+venv/
+env/
+ENV/
+.env
+.env.local
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Large Datasets & Downloaded PDFs (Minimizes Git repo size)
+data/metadata/*.parquet
+data/metadata/commercial_judgments.json
+data/selected/*.pdf
+
+# Frontend Dependencies & Builds
+frontend/node_modules/
+frontend/dist/
+frontend/.nx/
+frontend/.cache/
+
+# System & IDE files
+.DS_Store
+*.log
+.vscode/
+.idea/
