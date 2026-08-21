@@ -4,7 +4,7 @@ import psycopg2
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 # Add parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from models.search import SearchRequest, SearchResponse, CaseDetailResponse
 from services.search_service import execute_legal_search
 from services.case_service import get_case_by_id
+from services.ai_service import summarize_judgment_case, summarize_search_results
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
@@ -34,6 +35,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class CaseSummaryRequest(BaseModel):
+    case_id: int
+
+class SearchSummaryRequest(BaseModel):
+    query: str
+    results: List[Dict[str, Any]]
+
 @app.get("/api/health")
 def health_check():
     try:
@@ -48,7 +56,8 @@ def health_check():
             "status": "healthy",
             "database": "connected",
             "indexed_cases": ncases,
-            "indexed_chunks": nchunks
+            "indexed_chunks": nchunks,
+            "ai_engine": "OpenRouter (z-ai/glm-5.2:free)"
         }
     except Exception as e:
         return {
@@ -76,6 +85,27 @@ def get_case_details(case_id: int):
     if not case_data:
         raise HTTPException(status_code=404, detail=f"Case with ID {case_id} not found.")
     return case_data
+
+@app.post("/api/ai/summarize-case")
+def generate_ai_case_summary(req: CaseSummaryRequest):
+    case_data = get_case_by_id(req.case_id)
+    if not case_data:
+        raise HTTPException(status_code=404, detail=f"Case with ID {req.case_id} not found.")
+
+    res = summarize_judgment_case(
+        case_title=case_data.get("title", "Commercial Court Judgment"),
+        citation=case_data.get("citation", "[SC Precedent]"),
+        decision_date=case_data.get("decision_date") or str(case_data.get("year", "")),
+        bench=case_data.get("judges", "Supreme Court of India"),
+        raw_text=case_data.get("raw_text", ""),
+        chunks=case_data.get("chunks", [])
+    )
+    return res
+
+@app.post("/api/ai/summarize-search")
+def generate_ai_search_synthesis(req: SearchSummaryRequest):
+    res = summarize_search_results(query=req.query, results=req.results)
+    return res
 
 if __name__ == "__main__":
     import uvicorn

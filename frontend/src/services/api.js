@@ -22,3 +22,13 @@ export const getHealthStatus = async () => {
   const response = await axios.get(`${API_BASE_URL}/health`);
   return response.data;
 };
+
+export const generateCaseSummary = async (caseId) => {
+  const response = await axios.post(`${API_BASE_URL}/ai/summarize-case`, { case_id: caseId });
+  return response.data;
+};
+
+export const generateSearchSummary = async (query, results) => {
+  const response = await axios.post(`${API_BASE_URL}/ai/summarize-search`, { query, results });
+  return response.data;
+};

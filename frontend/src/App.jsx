@@ -4,6 +4,7 @@ import { SearchBar } from './components/SearchBar';
 import { FilterPanel } from './components/FilterPanel';
 import { ResultCard } from './components/ResultCard';
 import { CaseViewerModal } from './components/CaseViewerModal';
+import { AIBriefCard } from './components/AIBriefCard';
 import { searchCorpus, getHealthStatus } from './services/api';
 import { ShieldAlert, Scale } from 'lucide-react';
 
@@ -136,6 +137,11 @@ export function App() {
                   </div>
                 )}
               </div>
+
+              {/* AI Search Brief Synthesis Card */}
+              {results.length > 0 && (
+                <AIBriefCard query={searchMeta?.query || query} results={results} />
+              )}
 
               {/* Hallucination Protection Notice / Empty Results */}
               {(results.length === 0 || searchMeta?.message) ? (
